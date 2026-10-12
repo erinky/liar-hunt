@@ -106,6 +106,10 @@ body.screen .chip{font-size:20px;padding:10px 18px}
 .screen-actions .btn{width:auto;padding:16px 36px;font-size:20px}
 
 /* 숫자 공개 */
+.q-reveal{display:inline-block;max-width:100%;background:var(--surface);border:2px solid var(--accent);border-radius:20px;padding:18px 28px;font-size:34px;font-weight:800;line-height:1.35;margin-bottom:28px}
+.q-reveal span{display:block;font-size:15px;font-weight:700;color:var(--accent);letter-spacing:.1em;margin-bottom:6px}
+.q-reveal em{font-style:normal;color:var(--muted);font-size:.7em}
+@media (max-width:820px){.q-reveal{font-size:22px;padding:14px 18px}}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-top:28px}
 .tile{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px 14px;text-align:center}
 .tile .tn{font-size:22px;font-weight:700;color:#d6d8e2}
@@ -450,10 +454,11 @@ function viewFor(pid){
   if (r){
     v.round = {n:r.n, min:r.min, max:r.max, pids:r.pids,
       answered: r.pids.filter(p => p in r.answers),
-      answers: G.phase === "reveal" ? r.answers : {}};
+      answers: G.phase === "reveal" ? r.answers : {},
+      q: G.phase === "reveal" ? r.q : null};
     if (pid){
       const inR = r.pids.includes(pid), role = inR ? r.roles[pid] : null;
-      Object.assign(v.round, {inRound:inR, role, q: inR && role !== "liar" ? r.q : null, myAnswer: r.answers[pid] ?? null});
+      Object.assign(v.round, {inRound:inR, role, q: G.phase === "reveal" || (inR && role !== "liar") ? r.q : null, myAnswer: r.answers[pid] ?? null});
     }
   }
   return v;
@@ -600,6 +605,7 @@ function screenStatic(v){
     <div class="screen-actions"><button class="btn ghost" data-a="reveal">기다리지 않고 공개하기</button></div>
   </section>`;
   return header(v) + `<section class="stage">
+    <div class="q-reveal"><span>이번 질문</span>${esc(r.q)} <em>(${r.min}~${r.max})</em></div>
     <div class="phase-title">모두의 숫자</div>
     <div class="sub">이 숫자를 고른 이유를 물어보고, 마피아가 누구인지 토론하세요</div>
     ${numberLine(v)}
@@ -639,7 +645,8 @@ function phoneStatic(v){
       : `<div class="done">내가 적은 숫자<b>${r.myAnswer}</b>다른 사람을 기다리는 중…</div>`) + `<div id="dyn"></div>`;
   // reveal: 카드를 펼친 채로 둬서 마지막에 서로 보여줄 수 있게
   cardOpen = true;
-  return header(v) + `<div class="banner-talk">토론 시간! 큰 화면을 보세요<span>끝나면 이 화면을 서로 보여주세요</span></div>` + cardHTML(r) +
+  return header(v) + `<div class="banner-talk">토론 시간! 큰 화면을 보세요<span>끝나면 이 화면을 서로 보여주세요</span></div>` +
+    `<div class="qbox" style="margin-bottom:14px;text-align:center"><small>이번 질문</small>${esc(r.q)}</div>` + cardHTML(r) +
     `<div class="mini">${r.pids.map(p => `<div class="${p === v.me ? "me" : ""}">${esc(pname(v,p))}<b>${r.answers[p] ?? "—"}</b></div>`).join("")}</div>`;
 }
 function phoneDyn(v){
